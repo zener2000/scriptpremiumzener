@@ -19,7 +19,7 @@ local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 if not isWhitelisted(player.Name) then
-	player:Kick("Si eres alvaro mu puto capitano si eres sergio q te den)")
+	player:Kick("Irene villaplana bofffff)")
 	return
 end
 
