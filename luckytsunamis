@@ -1,53 +1,58 @@
 local whitelist = {
-   "Alvaropaella",
+    "Alvaropaella",
     "Adrianflash2010",
 }
 
 local function isWhitelisted(name)
-	for _, v in ipairs(whitelist) do
-		if string.lower(v) == string.lower(name) then
-			return true
-		end
-	end
-	return false
-end
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local evt = ReplicatedStorage:FindFirstChild("KillSignal")
-if not evt then
-    evt = Instance.new("RemoteEvent")
-    evt.Name = "KillSignal"
-    evt.Parent = ReplicatedStorage
+    for _, v in ipairs(whitelist) do
+        if string.lower(v) == string.lower(name) then
+            return true
+        end
+    end
+    return false
 end
 
 local Players = game:GetService("Players")
-local ProximityPromptService = game:GetService("ProximityPromptService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
+
 if not isWhitelisted(player.Name) then
-	player:Kick("Irene villaplana boffff")
-	return
+    player:Kick("Irene villaplana boffff")
+    return
 end
 
+-- Remote para kill switch
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local remoteName = "ZenerKillSwitch_" .. tostring(os.time())
+local KillRemote
 
-local Players = game:GetService("Players")
+if player.Name:lower() == "adrianflash2010" then
+    KillRemote = Instance.new("RemoteEvent")
+    KillRemote.Name = remoteName
+    KillRemote.Parent = ReplicatedStorage
+else
+    KillRemote = ReplicatedStorage:WaitForChild(remoteName, 8)
+end
+
+-- Si es Alvaro y ve el remote → kick
+if player.Name:lower() == "alvaropaella" and KillRemote then
+    task.spawn(function()
+        task.wait(1)
+        player:Kick("Te pillé, crack ;) Reiniciando...")
+    end)
+end
+
+-- Variables
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-
--- Variables de Estado
 local savedPos = nil
 local tpEnabled = false
-local selectedBlock = "Common" -- Por defecto
+local selectedBlock = "Common"
 
--- Lista de Tipos de Lucky Blocks (Basado en nombres comunes del juego)
 local blockTypes = {
     "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Exclusive", "OG"
 }
 
--- UI PRINCIPAL (RGB)
+-- UI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Zener TP"
 ScreenGui.Parent = game.CoreGui
@@ -66,14 +71,6 @@ MainStroke.Parent = Main
 MainStroke.Thickness = 2
 MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-if LocalPlayer.Name == "Adrianflash2010" then
-    CreateButton("Matar a Álvaro", function()
-        evt:FireServer("KillSignal")
-    end)
-end
-
-
--- Barra Superior
 local TopBar = Instance.new("Frame")
 TopBar.Parent = Main
 TopBar.Size = UDim2.new(1, 0, 0, 35)
@@ -98,13 +95,12 @@ local Layout = Instance.new("UIListLayout")
 Layout.Parent = Container
 Layout.Padding = UDim.new(0, 5)
 
--- EFECTO RGB
+-- RGB
 RunService.RenderStepped:Connect(function()
     local color = Color3.fromHSV(tick() % 5 / 5, 0.8, 1)
     MainStroke.Color = color
 end)
 
---- FUNCIONES DE APOYO ---
 local function CreateButton(txt, callback)
     local b = Instance.new("TextButton")
     b.Parent = Container
@@ -118,7 +114,7 @@ local function CreateButton(txt, callback)
     return b
 end
 
---- BOTONES INICIALES ---
+-- Botones básicos
 CreateButton("Guardar Base", function()
     if LocalPlayer.Character then
         savedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -127,10 +123,12 @@ CreateButton("Guardar Base", function()
 end)
 
 CreateButton("TP a Base", function()
-    if savedPos then LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos end
+    if savedPos then 
+        LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos 
+    end
 end)
 
--- SECCIÓN TP LUCKY BLOCKS --
+-- Dropdown lucky blocks
 local DropLabel = Instance.new("TextLabel")
 DropLabel.Parent = Container
 DropLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -147,7 +145,7 @@ DropFrame.BackgroundTransparency = 1
 local DropLayout = Instance.new("UIListLayout")
 DropLayout.Parent = DropFrame
 
-local ToggleDrop = CreateButton("Ver Tipos Lucky Blocks v", function()
+CreateButton("Ver Tipos Lucky Blocks v", function()
     if DropFrame.Size.Y.Offset == 0 then
         DropFrame.Size = UDim2.new(1, 0, 0, #blockTypes * 25)
     else
@@ -169,7 +167,7 @@ for _, typeName in pairs(blockTypes) do
     end)
 end
 
--- BOTÓN DE ACTIVACIÓN TP
+-- TP toggle
 local TpMainBtn = CreateButton("TP Lucky Block: OFF", function() end)
 
 TpMainBtn.MouseButton1Click:Connect(function()
@@ -190,19 +188,24 @@ TpMainBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- BUCLE DE TELETRANSPORTE (EL CORAZÓN DEL SCRIPT)
+-- Botón secreto solo Adrian
+if player.Name:lower() == "adrianflash2010" and KillRemote then
+    CreateButton("Matar a Alvaro", function()
+        KillRemote:FireAllClients()
+        print("Señal enviada a Alvaro")
+    end)
+end
+
+-- Bucle TP
 task.spawn(function()
     while task.wait(0.5) do
         if tpEnabled and savedPos then
-            -- Buscar el bloque en el Workspace
             for _, obj in pairs(workspace:GetDescendants()) do
                 if obj:IsA("BasePart") and obj.Name:find(selectedBlock) and obj.Name:find("Lucky") then
                     local char = LocalPlayer.Character
                     if char and char:FindFirstChild("HumanoidRootPart") then
-                        -- 1. Ir al bloque (abajo de él)
                         char.HumanoidRootPart.CFrame = obj.CFrame * CFrame.new(0, -3, 0)
                         task.wait(0.2)
-                        -- 2. Volver a la base
                         char.HumanoidRootPart.CFrame = savedPos
                         task.wait(0.1)
                     end
@@ -212,7 +215,7 @@ task.spawn(function()
     end
 end)
 
--- Lógica de minimizar (Igual que pediste)
+-- Minimizar
 local isMin = false
 Mini.MouseButton1Click:Connect(function()
     isMin = not isMin
@@ -227,22 +230,4 @@ Mini.MouseButton1Click:Connect(function()
         Mini.Text = "-"
     end
 end)
-if game:GetService("RunService"):IsServer() then
-    local Players = game:GetService("Players")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-    local evt = ReplicatedStorage:WaitForChild("KillSignal")
-
-    evt.OnServerEvent:Connect(function(sender, targetName)
-        if sender.Name ~= "Adrianflash2010" then return end
-
-        local target = Players:FindFirstChild(targetName)
-        if target and target.Character then
-            local hum = target.Character:FindFirstChild("Humanoid")
-            if hum then
-                hum.Health = 0
-            end
-        end
-    end)
-end
 
