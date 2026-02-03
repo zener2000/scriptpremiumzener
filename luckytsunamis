@@ -1,0 +1,213 @@
+local whitelist = {
+   "Alvaropaell",
+    "Adrianflash2010",
+}
+
+local function isWhitelisted(name)
+	for _, v in ipairs(whitelist) do
+		if string.lower(v) == string.lower(name) then
+			return true
+		end
+	end
+	return false
+end
+
+local Players = game:GetService("Players")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+if not isWhitelisted(player.Name) then
+	player:Kick("Si eres alvaro mu puto capitano si eres sergio q te den)")
+	return
+end
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- Variables de Estado
+local savedPos = nil
+local tpEnabled = false
+local selectedBlock = "Common" -- Por defecto
+
+-- Lista de Tipos de Lucky Blocks (Basado en nombres comunes del juego)
+local blockTypes = {
+    "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Exclusive", "OG"
+}
+
+-- UI PRINCIPAL (RGB)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Zener TP"
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.Position = UDim2.new(0.5, -125, 0.5, -150)
+Main.Size = UDim2.new(0, 260, 0, 350)
+Main.Active = true
+Main.Draggable = true
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Parent = Main
+MainStroke.Thickness = 2
+MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Barra Superior
+local TopBar = Instance.new("Frame")
+TopBar.Parent = Main
+TopBar.Size = UDim2.new(1, 0, 0, 35)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+local Mini = Instance.new("TextButton")
+Mini.Parent = TopBar
+Mini.Text = "-"
+Mini.Position = UDim2.new(1, -70, 0, 0)
+Mini.Size = UDim2.new(0, 35, 0, 35)
+Mini.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Mini.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local Container = Instance.new("ScrollingFrame")
+Container.Parent = Main
+Container.Position = UDim2.new(0, 5, 0, 40)
+Container.Size = UDim2.new(1, -10, 1, -45)
+Container.BackgroundTransparency = 1
+Container.CanvasSize = UDim2.new(0, 0, 1.5, 0)
+
+local Layout = Instance.new("UIListLayout")
+Layout.Parent = Container
+Layout.Padding = UDim.new(0, 5)
+
+-- EFECTO RGB
+RunService.RenderStepped:Connect(function()
+    local color = Color3.fromHSV(tick() % 5 / 5, 0.8, 1)
+    MainStroke.Color = color
+end)
+
+--- FUNCIONES DE APOYO ---
+local function CreateButton(txt, callback)
+    local b = Instance.new("TextButton")
+    b.Parent = Container
+    b.Size = UDim2.new(1, 0, 0, 35)
+    b.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    b.Text = txt
+    b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    b.Font = Enum.Font.Gotham
+    b.TextSize = 13
+    b.MouseButton1Click:Connect(callback)
+    return b
+end
+
+--- BOTONES INICIALES ---
+CreateButton("Guardar Base", function()
+    if LocalPlayer.Character then
+        savedPos = LocalPlayer.Character.HumanoidRootPart.CFrame
+        print("Base Guardada!")
+    end
+end)
+
+CreateButton("TP a Base", function()
+    if savedPos then LocalPlayer.Character.HumanoidRootPart.CFrame = savedPos end
+end)
+
+-- SECCIÓN TP LUCKY BLOCKS --
+local DropLabel = Instance.new("TextLabel")
+DropLabel.Parent = Container
+DropLabel.Size = UDim2.new(1, 0, 0, 25)
+DropLabel.Text = "Selecciona Tipo: " .. selectedBlock
+DropLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+DropLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local DropFrame = Instance.new("Frame")
+DropFrame.Parent = Container
+DropFrame.Size = UDim2.new(1, 0, 0, 0)
+DropFrame.ClipsDescendants = true
+DropFrame.BackgroundTransparency = 1
+
+local DropLayout = Instance.new("UIListLayout")
+DropLayout.Parent = DropFrame
+
+local ToggleDrop = CreateButton("Ver Tipos Lucky Blocks v", function()
+    if DropFrame.Size.Y.Offset == 0 then
+        DropFrame.Size = UDim2.new(1, 0, 0, #blockTypes * 25)
+    else
+        DropFrame.Size = UDim2.new(1, 0, 0, 0)
+    end
+end)
+
+for _, typeName in pairs(blockTypes) do
+    local b = Instance.new("TextButton")
+    b.Parent = DropFrame
+    b.Size = UDim2.new(1, 0, 0, 25)
+    b.Text = typeName
+    b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    b.TextColor3 = Color3.fromRGB(200, 200, 200)
+    b.MouseButton1Click:Connect(function()
+        selectedBlock = typeName
+        DropLabel.Text = "Selecciona Tipo: " .. selectedBlock
+        DropFrame.Size = UDim2.new(1, 0, 0, 0)
+    end)
+end
+
+-- BOTÓN DE ACTIVACIÓN TP
+local TpMainBtn = CreateButton("TP Lucky Block: OFF", function() end)
+
+TpMainBtn.MouseButton1Click:Connect(function()
+    if not savedPos then
+        TpMainBtn.Text = "¡GUARDA BASE PRIMERO!"
+        task.wait(1)
+        TpMainBtn.Text = "TP Lucky Block: OFF"
+        return
+    end
+
+    tpEnabled = not tpEnabled
+    if tpEnabled then
+        TpMainBtn.Text = "TP Lucky Block: ON"
+        TpMainBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    else
+        TpMainBtn.Text = "TP Lucky Block: OFF"
+        TpMainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+end)
+
+-- BUCLE DE TELETRANSPORTE (EL CORAZÓN DEL SCRIPT)
+task.spawn(function()
+    while task.wait(0.5) do
+        if tpEnabled and savedPos then
+            -- Buscar el bloque en el Workspace
+            for _, obj in pairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj.Name:find(selectedBlock) and obj.Name:find("Lucky") then
+                    local char = LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        -- 1. Ir al bloque (abajo de él)
+                        char.HumanoidRootPart.CFrame = obj.CFrame * CFrame.new(0, -3, 0)
+                        task.wait(0.2)
+                        -- 2. Volver a la base
+                        char.HumanoidRootPart.CFrame = savedPos
+                        task.wait(0.1)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- Lógica de minimizar (Igual que pediste)
+local isMin = false
+Mini.MouseButton1Click:Connect(function()
+    isMin = not isMin
+    if isMin then
+        Container.Visible = false
+        Main:TweenSize(UDim2.new(0, 260, 0, 35), "Out", "Quad", 0.3, true)
+        Mini.Text = "+"
+    else
+        Main:TweenSize(UDim2.new(0, 260, 0, 350), "Out", "Quad", 0.3, true)
+        task.wait(0.3)
+        Container.Visible = true
+        Mini.Text = "-"
+    end
+end)
