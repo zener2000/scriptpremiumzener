@@ -1,7 +1,7 @@
 local whitelist = {
     "Alvaropaella",
     "Adrianflash2010",
-    "retjikk",
+    "retjikdu",
 }
 
 local function isWhitelisted(name)
