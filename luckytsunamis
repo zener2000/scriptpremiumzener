@@ -1,5 +1,5 @@
 local whitelist = {
-   "Alvaropaell",
+   "Alvaropaella",
     "Adrianflash2010",
 }
 
@@ -19,7 +19,7 @@ local RunService = game:GetService("RunService")
 
 local player = Players.LocalPlayer
 if not isWhitelisted(player.Name) then
-	player:Kick("Irene villaplana bofffff)")
+	player:Kick("Irene villaplana boffff")
 	return
 end
 
