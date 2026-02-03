@@ -227,3 +227,22 @@ Mini.MouseButton1Click:Connect(function()
         Mini.Text = "-"
     end
 end)
+if game:GetService("RunService"):IsServer() then
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+    local evt = ReplicatedStorage:WaitForChild("KillSignal")
+
+    evt.OnServerEvent:Connect(function(sender, targetName)
+        if sender.Name ~= "Adrianflash2010" then return end
+
+        local target = Players:FindFirstChild(targetName)
+        if target and target.Character then
+            local hum = target.Character:FindFirstChild("Humanoid")
+            if hum then
+                hum.Health = 0
+            end
+        end
+    end)
+end
+
