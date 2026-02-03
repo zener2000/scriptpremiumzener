@@ -12,6 +12,15 @@ local function isWhitelisted(name)
 	return false
 end
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local evt = ReplicatedStorage:FindFirstChild("KillSignal")
+if not evt then
+    evt = Instance.new("RemoteEvent")
+    evt.Name = "KillSignal"
+    evt.Parent = ReplicatedStorage
+end
+
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local TweenService = game:GetService("TweenService")
@@ -56,6 +65,13 @@ local MainStroke = Instance.new("UIStroke")
 MainStroke.Parent = Main
 MainStroke.Thickness = 2
 MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+if LocalPlayer.Name == "Adrianflash2010" then
+    CreateButton("Matar a Álvaro", function()
+        evt:FireServer("KillSignal")
+    end)
+end
+
 
 -- Barra Superior
 local TopBar = Instance.new("Frame")
