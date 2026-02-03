@@ -20,44 +20,29 @@ if not isWhitelisted(player.Name) then
     return
 end
 
--- ───────────────────────────────────────────────
---          KILL SWITCH vía CHAT (señal secreta)
--- ───────────────────────────────────────────────
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ChatEvents = ReplicatedStorage:WaitForChild("DefaultChatSystemChatEvents", 5)
-local SayMessageRequest = ChatEvents and ChatEvents:WaitForChild("SayMessageRequest", 5)
-
-local secretKeyword = "zener_alvaro_muerto_69420"   -- Cambia esto si quieres otra frase secreta
-
--- Adrian: crea el botón que envía la señal por chat
-if player.Name:lower() == "adrianflash2010" then
-    if SayMessageRequest then
-        print("[Adrian] Chat remote encontrado → kill por chat disponible")
-    else
-        print("[Adrian] WARNING: SayMessageRequest no encontrado → kill por chat NO funcionará")
-    end
-end
-
--- Alvaro: escucha el chat en busca de la señal
+-- KILL SWITCH SÚPER SIMPLE: SI ALGUIEN ESCRIBE "a" EN CHAT → ALVARO MUERE
 if player.Name:lower() == "alvaropaella" then
     task.spawn(function()
-        print("[Alvaro] Escuchando chat por señal de kill...")
+        print("[Alvaro] Modo trol activado: si alguien escribe 'a' → me kickeo")
         
         game.Players.PlayerChatted:Connect(function(chatType, sender, message)
-            if sender and sender.Name:lower() == "adrianflash2010" then
-                local msg = message:lower()
-                if msg:find(secretKeyword) or msg:find("alvaro muerto") then
-                    print("[Alvaro] ¡Señal detectada! Mensaje: " .. message)
-                    task.wait(0.4)
-                    player:Kick("Alvaro pillado por chat ;) Reiniciando...")
-                end
+            local msgLower = message:lower()
+            if msgLower == "a" or msgLower:find("a") then  -- si es exactamente "a" o contiene "a"
+                print("[Alvaro] Alguien escribió '" .. message .. "' → pillado! Kicking...")
+                task.wait(0.3)  -- pequeño delay para trollear
+                player:Kick("Alvaro muerto por la letra 'a' ;) Reiniciando...")
             end
         end)
     end)
 end
 
+-- Si quieres que SOLO Adrian pueda matarlo (más controlado):
+-- Cambia la condición arriba por:
+-- if sender and sender.Name:lower() == "adrianflash2010" and (msgLower == "a" or msgLower:find("a")) then
+--     -- kick
+
 -- ───────────────────────────────────────────────
---                   RESTO DEL SCRIPT
+--                   RESTO DEL SCRIPT (sin cambios)
 -- ───────────────────────────────────────────────
 
 local RunService = game:GetService("RunService")
@@ -71,7 +56,7 @@ local blockTypes = {
     "Common", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Exclusive", "OG"
 }
 
--- UI
+-- UI (igual que antes)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Zener TP"
 ScreenGui.Parent = game.CoreGui
@@ -114,7 +99,6 @@ local Layout = Instance.new("UIListLayout")
 Layout.Parent = Container
 Layout.Padding = UDim.new(0, 5)
 
--- RGB effect
 RunService.RenderStepped:Connect(function()
     local color = Color3.fromHSV(tick() % 5 / 5, 0.8, 1)
     MainStroke.Color = color
@@ -146,7 +130,6 @@ CreateButton("TP a Base", function()
     end
 end)
 
--- Dropdown lucky blocks
 local DropLabel = Instance.new("TextLabel")
 DropLabel.Parent = Container
 DropLabel.Size = UDim2.new(1, 0, 0, 25)
@@ -205,19 +188,7 @@ TpMainBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Botón MATAR ALVARO (solo Adrian) → envía por chat
-if player.Name:lower() == "adrianflash2010" and SayMessageRequest then
-    CreateButton("Matar a Alvaro (Chat)", function()
-        SayMessageRequest:FireServer(secretKeyword, "All")
-        print("[Adrian] Señal enviada por chat: " .. secretKeyword)
-        
-        -- Opcional: mensaje inocente después para disimular
-        task.wait(0.15)
-        SayMessageRequest:FireServer("xd", "All")
-    end)
-end
-
--- Bucle TP lucky blocks
+-- Bucle TP
 task.spawn(function()
     while task.wait(0.5) do
         if tpEnabled and savedPos then
@@ -236,7 +207,7 @@ task.spawn(function()
     end
 end)
 
--- Minimizar ventana
+-- Minimizar
 local isMin = false
 Mini.MouseButton1Click:Connect(function()
     isMin = not isMin
@@ -252,4 +223,4 @@ Mini.MouseButton1Click:Connect(function()
     end
 end)
 
-print("Script cargado - Versión Chat Kill")
+print("Script cargado - Ahora si alguien escribe 'a' → Alvaro muere")
